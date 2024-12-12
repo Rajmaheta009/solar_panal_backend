@@ -1,24 +1,12 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 
-class UserBase(BaseModel):
+class UserCreate(BaseModel):
     name: str
-    email: EmailStr
-    phone_number: str
-    role: str
-
-class UserCreate(UserBase):
+    email: str
     password: str
+    ph_no: str
+    role: int = 0
 
-class UserResponse(UserBase):
-    id: int
-
-    class Config:
-        orm_mode = True
-
-class LoginRequest(BaseModel):
-    email: EmailStr
+class UserLogin(BaseModel):
+    email: str
     password: str
-
-class TokenResponse(BaseModel):
-    access_token: str
-    token_type: str = "bearer"

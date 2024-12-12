@@ -1,40 +1,45 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from auth.jwt import verify_token
 from database import get_db
-from schemas.news import NewsCreate, NewsResponse
-from services.news import create_news, get_all_news, get_news_by_id, update_news, delete_news
-from auth.jwt import admin_required  # Assuming admin role is validated here
+from models.news import News
+from schemas.news import NewsCreate
 
-router = APIRouter(tags=["News"], prefix="/news")
+router = APIRouter()
 
-# Ensure only admins can access
-def admin_required(user=Depends(get_current_user)):
-    if user.role != "admin":
-        raise HTTPException(status_code=403, detail="Admin privileges required")
+def admin_required(token: str):
+    payload = verify_token(token)
+    if not payload or payload.get("role") != 1:
+        raise HTTPException(status_code=403, detail="Admin access required")
 
-@router.post("/", response_model=NewsResponse, dependencies=[Depends(admin_required)])
-def create_news_endpoint(news: NewsCreate, db: Session = Depends(get_db)):
-    return create_news(db, news)
+@router.post("/news", dependencies=[Depends(admin_required)],status_code=201)
+def create_news(news: NewsCreate, db: Session = Depends(get_db)):
+    new_news = News(title=news.title, description=news.description, picture=news.picture)
+    db.add(new_news)
+    db.commit()
+    return {"msg": "News created successfully"}
 
-@router.get("/", response_model=list[NewsResponse])
-def get_news_endpoint(db: Session = Depends(get_db)):
-    return get_all_news(db)
+@router.get("/news",status_code=200)
+def get_news(db: Session = Depends(get_db)):
+    return db.query(News).all()
 
-@router.get("/{news_id}", response_model=NewsResponse)
-def get_news_by_id_endpoint(news_id: int, db: Session = Depends(get_db)):
-    news = get_news_by_id(db, news_id)
-    if not news:
+@router.put("/news/{news_id}", dependencies=[Depends(admin_required)],status_code=202)
+def update_news(news_id: int, news: NewsCreate, db: Session = Depends(get_db)):
+    db_news = db.query(News).filter(News.id == news_id).first()
+    if not db_news:
         raise HTTPException(status_code=404, detail="News not found")
-    return news
+    db_news.title = news.title
+    db_news.description = news.description
+    db_news.picture = news.picture
+    db.commit()
+    return {"msg": "News updated successfully"}
 
-@router.put("/{news_id}", response_model=NewsResponse, dependencies=[Depends(admin_required)])
-def update_news_endpoint(news_id: int, news: NewsCreate, db: Session = Depends(get_db)):
-    updated_news = update_news(db, news_id, news)
-    if not updated_news:
+@router.delete("/news/{news_id}", dependencies=[Depends(admin_required)])
+def delete_news(news_id: int, db: Session = Depends(get_db)):
+    db_news = db.query(News).filter(News.id == news_id).first()
+    if not db_news:
         raise HTTPException(status_code=404, detail="News not found")
-    return updated_news
+    db.delete(db_news)
+    db.commit()
+    return {"msg": "News deleted successfully"}
 
-@router.delete("/{news_id}", status_code=status.HTTP_204_NO_CONTENT, dependencies=[Depends(admin_required)])
-def delete_news_endpoint(news_id: int, db: Session = Depends(get_db)):
-    if not delete_news(db, news_id):
-        raise HTTPException(status_code=404, detail="News not found")
