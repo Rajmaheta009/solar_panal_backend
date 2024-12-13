@@ -26,3 +26,12 @@ def login(user: UserLogin, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Invalid credentials")
     token = create_access_token({"sub": db_user.email, "role": db_user.role})
     return {"access_token": token, "token_type": "bearer"}
+
+@router.post("/logout")
+def logout(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+    # Delete the token from the database
+    token_in_db = db.query(AuthUser).filter(AuthUser.token == token).first()
+    if token_in_db:
+        db.delete(token_in_db)
+        db.commit()
+    return {"detail": "Successfully logged out"}

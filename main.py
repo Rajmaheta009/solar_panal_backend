@@ -11,5 +11,5 @@ app = FastAPI()
 
 # Include authentication routes
 app.include_router(auth.router, prefix="/auth", tags=["Authentication"])
-
 app.include_router(news.router, prefix="/news", tags=["News"])
+app.include_router(news.router, prefix="/logout", tags=["logout"])
