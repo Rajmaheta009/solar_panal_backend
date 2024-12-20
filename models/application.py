@@ -6,4 +6,6 @@ class Application(Base):
     id = Column(Integer, primary_key=True, index=True)
     type=Column(String)
     InnerHtmlText=Column(String)
+    is_deleted = Column(Integer,default=0)
+
 

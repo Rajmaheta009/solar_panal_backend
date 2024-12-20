@@ -1,11 +1,9 @@
 from sqlalchemy import Column, Integer, String
 from database import Base  # Correct import for Base
 
-class News(Base):
-    __tablename__ = "news"
+class Menu(Base):
+    __tablename__ = "menu"
 
     id = Column(Integer, primary_key=True, index=True)
-    title = Column(String, nullable=False)
-    description = Column(String, nullable=False)
-    picture = Column(String, nullable=True)
+    name  = Column(String, nullable=False)
     is_deleted = Column(Integer,default=0)

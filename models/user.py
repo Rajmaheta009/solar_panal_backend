@@ -9,3 +9,4 @@ class User(Base):
     password = Column(String)
     ph_no = Column(String)
     role = Column(Integer, default=0)  # 0: User, 1: Admin
+    is_deleted = Column(Integer,default=0)

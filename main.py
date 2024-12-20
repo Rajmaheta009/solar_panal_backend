@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from database import Base, engine
-from router import auth, news,application_endpoint,contanct_us
+from router import auth, news,application_endpoint,contanct_us,menu,Pages,pages_content
 from fastapi.middleware.cors import CORSMiddleware
 import logging
 
@@ -27,3 +27,6 @@ app.include_router(auth.router, prefix="/auth", tags=["Authentication"])
 app.include_router(news.router, prefix="/news", tags=["News"])
 app.include_router(application_endpoint.router, prefix="/application", tags=["Application"])
 app.include_router(contanct_us.router, prefix="/application", tags=["Application"])
+app.include_router(menu.router, prefix="/api/menu", tags=["Menu"])
+app.include_router(Pages.router, prefix="/api/pages", tags=["Pages"])
+app.include_router(pages_content.router, prefix="/api/pages-content", tags=["Page Content"])

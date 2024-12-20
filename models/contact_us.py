@@ -9,3 +9,4 @@ class contact_us(Base):
     subject = Column(String)
     message = Column(String)
     ph_no = Column(Integer)
+    is_deleted = Column(Integer,default=0)
