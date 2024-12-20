@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from auth.jwt import verify_token
+from auth.jwt import verify_access_token
 from database import get_db
 from models.news import News
 from schemas.news import NewsCreate
@@ -8,7 +8,7 @@ from schemas.news import NewsCreate
 router = APIRouter()
 
 def admin_required(token: str):
-    payload = verify_token(token)
+    payload = verify_access_token(token)
     if not payload or payload.get("role") != 1:
         raise HTTPException(status_code=403, detail="Admin access required")
 

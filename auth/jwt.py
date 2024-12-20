@@ -22,6 +22,7 @@ def create_access_token(data: dict, db: Session) -> str:
     expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
     token = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    print(token)
 
     # Save the token to the database
     user_id = data.get("id")
