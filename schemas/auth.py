@@ -1,12 +1,12 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 
 class UserCreate(BaseModel):
     name: str
-    email: str
+    email: EmailStr
     password: str
-    ph_no: str
-    role: int = 0
+    phonenumber: str  # Changed to string for better compatibility
+    role: str = "user"  # Default role for normal users
 
 class UserLogin(BaseModel):
-    email: str
+    email: EmailStr  # Using EmailStr to validate email format
     password: str

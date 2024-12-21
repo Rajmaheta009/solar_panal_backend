@@ -1,12 +1,12 @@
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, Boolean
 from database import Base
 
 class User(Base):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, index=True)
-    email = Column(String, unique=True, index=True)
+    email = Column(String(255), unique=True, index=True)  # Added length for email
     password = Column(String)
-    ph_no = Column(String)
-    role = Column(Integer, default=0)  # 0: User, 1: Admin
-    is_deleted = Column(Integer,default=0)
+    phonenumber = Column(String)  # Changed to String for phone number
+    role = Column(String, default="user")
+    is_deleted = Column(Boolean, default=False)  # Changed to Boolean for clarity

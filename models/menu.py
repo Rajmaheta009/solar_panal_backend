@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String,Boolean
 from database import Base  # Correct import for Base
 
 class Menu(Base):
@@ -6,4 +6,4 @@ class Menu(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name  = Column(String, nullable=False)
-    is_deleted = Column(Integer,default=0)
+    is_deleted = Column(Boolean, default=False)  # Changed to Boolean for clarity

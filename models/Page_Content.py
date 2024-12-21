@@ -8,6 +8,6 @@ class PageContent(Base):
     id = Column(Integer, primary_key=True, index=True)
     page_id = Column(Integer, ForeignKey("pages.id"), nullable=False)
     content = Column(Text, nullable=False)
-    is_deleted = Column(Boolean, default=False)
+    is_deleted = Column(Boolean, default=False)  # Changed to Boolean for clarity
 
     page = relationship("Page")

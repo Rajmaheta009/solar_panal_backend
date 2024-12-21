@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String,Boolean
 from database import Base
 
 class Application(Base):
@@ -6,6 +6,6 @@ class Application(Base):
     id = Column(Integer, primary_key=True, index=True)
     type=Column(String)
     InnerHtmlText=Column(String)
-    is_deleted = Column(Integer,default=0)
+    is_deleted = Column(Boolean, default=False)  # Changed to Boolean for clarity
 
 

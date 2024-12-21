@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String,Boolean
 from database import Base
 
 class contact_us(Base):
@@ -9,4 +9,4 @@ class contact_us(Base):
     subject = Column(String)
     message = Column(String)
     ph_no = Column(Integer)
-    is_deleted = Column(Integer,default=0)
+    is_deleted = Column(Boolean, default=False)  # Changed to Boolean for clarity

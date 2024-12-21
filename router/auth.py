@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 from fastapi.security import OAuth2PasswordBearer
 from auth.hashing import hash_password, verify_password
@@ -15,20 +16,40 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 @router.post("/register", status_code=201)
 def register(user: UserCreate, db: Session = Depends(get_db)):
-    db_user = db.query(User).filter(User.email == user.email).first()
-    if db_user:
-        raise HTTPException(status_code=400, detail="Email already registered")
-    hashed_password = hash_password(user.password)
-    new_user = User(
-        name=user.name,
-        email=user.email,
-        password=hashed_password,
-        number=user.number,  # Assuming you meant "ph_no" as "number"
-        role=user.role,
-    )
-    db.add(new_user)
-    db.commit()
-    return {"msg": "User registered successfully"}
+    try:
+        # Check if the email already exists in the database
+        db_user = db.query(User).filter(User.email == user.email).first()
+
+        if db_user:
+            raise HTTPException(status_code=400, detail="Email already registered")
+
+        # Hash the password before inserting it into the database
+        hashed_password = hash_password(user.password)
+
+        # Create a new User object with the provided data
+        new_user = User(
+            name=user.name,
+            email=user.email,
+            password=hashed_password,
+            phonenumber=user.phonenumber,
+            role=user.role,
+        )
+
+        # Add the new user to the session
+        db.add(new_user)
+
+        # Commit the transaction to the database
+        db.commit()
+
+        # Return a success message if everything works fine
+        return {"msg": "User registered successfully"}
+
+    except SQLAlchemyError as e:
+        # Rollback the transaction in case of error
+        db.rollback()
+        print(f"Error: {e}")
+        raise HTTPException(status_code=500, detail="An error occurred while registering the user")
+
 
 @router.post("/login", status_code=200)
 def login(user: UserLogin, db: Session = Depends(get_db)):
