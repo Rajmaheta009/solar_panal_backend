@@ -2,15 +2,10 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from database import get_db
 from models import contact_us
-from pydantic import BaseModel, EmailStr
+from schemas.contact_us import ContactUsRequest
 
 router = APIRouter()
 
-class ContactUsRequest(BaseModel):
-    name: str
-    email: EmailStr
-    subject: str
-    message: str
 
 @router.post("/contact_us")
 async def contact_us(request: ContactUsRequest, db: Session = Depends(get_db)):

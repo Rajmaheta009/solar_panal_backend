@@ -17,7 +17,6 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 @router.post("/register", status_code=201)
 def register(user: UserCreate, db: Session = Depends(get_db)):
     try:
-        # Check if the email already exists in the database
         db_user = db.query(User).filter(User.email == user.email).first()
 
         if db_user:
@@ -33,6 +32,7 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
             password=hashed_password,
             phonenumber=user.phonenumber,
             role=user.role,
+            is_delete=user.is_delete
         )
 
         # Add the new user to the session
@@ -40,12 +40,9 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
 
         # Commit the transaction to the database
         db.commit()
-
-        # Return a success message if everything works fine
         return {"msg": "User registered successfully"}
 
     except SQLAlchemyError as e:
-        # Rollback the transaction in case of error
         db.rollback()
         print(f"Error: {e}")
         raise HTTPException(status_code=500, detail="An error occurred while registering the user")

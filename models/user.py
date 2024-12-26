@@ -9,4 +9,4 @@ class User(Base):
     password = Column(String)
     phonenumber = Column(String)  # Changed to String for phone number
     role = Column(String, default="user")
-    is_deleted = Column(Boolean, default=False)  # Changed to Boolean for clarity
+    is_delete = Column(Boolean, default=False)  # Changed to Boolean for clarity
