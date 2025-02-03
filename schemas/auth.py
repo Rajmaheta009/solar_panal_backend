@@ -4,7 +4,7 @@ class UserCreate(BaseModel):
     name: str
     email: EmailStr
     password: str
-    phonenumber: str  # Changed to string for better compatibility
+    phonenumber: int  # Changed to string for better compatibility
     role: str = "user"  # Default role for normal users
     is_delete : bool = False
 
