@@ -1,11 +1,12 @@
-from pydantic import BaseModel
+from sqlalchemy import Column, Integer, String, Float, Boolean
+from database import Base
 
-# Product model for request and response
-class Product(BaseModel):
-    name: str
-    description: str
-    price: float
-    quantity: int
+class Product(Base):
+    __tablename__ = "products"
 
-class ProductInResponse(Product):
-    id: int
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String, nullable=False)
+    description = Column(String, nullable=True)
+    price = Column(Float, nullable=False)
+    stock = Column(Integer, nullable=False)
+    is_deleted = Column(Boolean, default=False)
