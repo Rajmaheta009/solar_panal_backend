@@ -9,14 +9,20 @@ from models.user import User
 router = APIRouter()
 
 
+@router.get("/{product_id}", status_code=200)
+def get_product(product_id: int, db: Session = Depends(get_db)):
+    product = db.query(Product).filter(Product.id == product_id, Product.is_deleted == False).first()
+
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+
+    return {"product": product}
+
 # Get All Products (Admin Only)
 @router.get("/", status_code=200)
-def get_products(
-        db: Session = Depends(get_db),
-):
+def get_all_products(db: Session = Depends(get_db)):
     products = db.query(Product).filter(Product.is_deleted == False).all()
     return {"products": products}
-
 
 # Create Product (Admin Only)
 @router.post("/", status_code=201)
