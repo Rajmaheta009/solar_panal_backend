@@ -13,7 +13,6 @@ router = APIRouter()
 @router.get("/", status_code=200)
 def get_products(
         db: Session = Depends(get_db),
-        user: User = Depends(admin_required),
 ):
     products = db.query(Product).filter(Product.is_deleted == False).all()
     return {"products": products}
@@ -24,7 +23,6 @@ def get_products(
 def create_product(
         product: ProductRequest,
         db: Session = Depends(get_db),
-        user: User = Depends(admin_required),
 ):
     new_product = Product(**product.dict())
     db.add(new_product)
@@ -39,7 +37,6 @@ def update_product(
         product_id: int,
         product: ProductRequest,
         db: Session = Depends(get_db),
-        user: User = Depends(admin_required),
 ):
     existing_product = db.query(Product).filter(Product.id == product_id, Product.is_deleted == False).first()
     if not existing_product:
@@ -58,7 +55,6 @@ def update_product(
 def delete_product(
         product_id: int,
         db: Session = Depends(get_db),
-        user: User = Depends(admin_required),
 ):
     product = db.query(Product).filter(Product.id == product_id).first()
     if not product:

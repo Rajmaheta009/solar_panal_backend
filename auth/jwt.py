@@ -15,7 +15,7 @@ logging.basicConfig(level=logging.DEBUG)
 # Constants
 SECRET_KEY ="pFL1Y_0ID6aZqk7c6pw1vZ8O-XWXFHMi4WHLJ8h42P7Mx-6-uD4uPAqTX7Lv-EJ4"
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 2
+ACCESS_TOKEN_EXPIRE_MINUTES = 20000
 
 # OAuth2 dependency for to              ken extraction
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
@@ -25,15 +25,16 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 def create_access_token(data: dict, db: Session) -> str:
     if not data.get("id"):
         raise ValueError("User ID is required to create a token.")
-
+    if not data.get("role"):
+        raise ValueError("role is not in ")
     to_encode = data.copy()
-    expire = datetime.utcnow() + timedelta(days=ACCESS_TOKEN_EXPIRE_MINUTES)
+    expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
     token = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
     # Save the token to the database
     user_id = data.get("id")
-
+    user_role = data.get("role")
     # Check if an existing token exists for the user and delete it
     existing_token = db.query(AuthUser).filter(AuthUser.id == user_id).first()
     if existing_token:
@@ -41,7 +42,7 @@ def create_access_token(data: dict, db: Session) -> str:
         db.commit()
 
     # Save the new token
-    auth_user = AuthUser(id=user_id, token=token)
+    auth_user = AuthUser(id=user_id, token=token,role=user_role)
     db.add(auth_user)
     db.commit()
 
