@@ -5,4 +5,5 @@ class ProductRequest(BaseModel):
     description: str
     price: float
     stock: int
+    type:str
     is_deleted: bool = False  # Optional, default value
