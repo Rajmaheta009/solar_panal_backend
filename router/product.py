@@ -1,8 +1,7 @@
 import os
 from pathlib import Path
-from sqlalchemy import text
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, Form, File
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, Form, File,Header
 from sqlalchemy.orm import Session
 from database import get_db
 from models.product import Product,get_next_id
@@ -61,6 +60,7 @@ async def create_product(
         type: str = Form(...),
         image: UploadFile = File(...),
         db: Session = Depends(get_db),
+        user_name : str =Header(None)
 ):
     file_extension = os.path.splitext(image.filename)[1] # Keeps original extension
     next_id=get_next_id(db)
@@ -71,7 +71,6 @@ async def create_product(
     # Save Image
     with open(image_path, "wb") as f:
         f.write(image.file.read())
-
     # Create Product
     new_product = Product(
         id=next_id,
@@ -82,11 +81,15 @@ async def create_product(
         stock=stock,
         type=type
     )
+
+    # ✅ Attach username to product before insert (so the trigger can use it)
+    setattr(new_product, "current_user", user_name)
+
     db.add(new_product)
     db.commit()
     db.refresh(new_product)
 
-    return {"msg": "Product created successfully", "product": new_product}
+    return {"msg": "Product created successfully", "product": new_product,"username":user_name}
 
 
 @router.put("/{product_id}", status_code=200)
@@ -99,6 +102,7 @@ def update_product(
         type: Optional[str] = Form(None),
         image: Optional[UploadFile] = File(None),
         db: Session = Depends(get_db),
+        user_name:str = Header(None)
 ):
     existing_product = db.query(Product).filter(Product.id == product_id, Product.is_deleted == False).first()
     if not existing_product:
@@ -124,21 +128,28 @@ def update_product(
             f.write(image.file.read())
 
         existing_product.image = new_filename
+    try:
+        setattr(existing_product, "current_user", user_name)
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
     db.commit()
     db.refresh(existing_product)
 
-    return {"msg": "Product updated successfully", "product": existing_product}
+    return {"msg": "Product updated successfully", "product": existing_product,"username":user_name}
+
 # Soft Delete Product (Admin Only)
 @router.delete("/{product_id}", status_code=200)
 def delete_product(
         product_id: int,
         db: Session = Depends(get_db),
+        user_name:str = Header(None)
 ):
     product = db.query(Product).filter(Product.id == product_id).first()
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
-
+    setattr(product, "current_user", user_name)
     product.is_deleted = True
     db.commit()
     return {"msg": "Product deleted successfully"}

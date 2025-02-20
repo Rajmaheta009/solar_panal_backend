@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from pydantic import BaseModel
 
 class ProductRequest(BaseModel):
@@ -7,3 +9,11 @@ class ProductRequest(BaseModel):
     stock: int
     type:str
     is_deleted: bool = False  # Optional, default value
+
+# 📜 Log Schema
+class LogResponse(BaseModel):
+    id: int
+    table_name:str
+    user_name: str
+    action: str
+    time: datetime

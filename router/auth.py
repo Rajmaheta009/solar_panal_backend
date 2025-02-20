@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException,Header
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 from fastapi.security import OAuth2PasswordBearer
@@ -49,7 +49,7 @@ def get_user(user_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/register", status_code=201)
-def register(user: UserCreate, db: Session = Depends(get_db)):
+def register(user: UserCreate, db: Session = Depends(get_db),user_name:str=Header(None)):
     try:
         db_user = db.query(User).filter(User.email == user.email).first()
         if db_user:
@@ -75,6 +75,7 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
             role=user.role,
             is_delete=user.is_delete
         )
+        setattr(new_user, "current_user", user_name)
 
         db.add(new_user)
         db.commit()
@@ -96,7 +97,7 @@ def login(user: UserLogin, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="User Deleted")
 
     token = create_access_token({"id": db_user.id, "role": db_user.role}, db)
-    return {"access_token": token, "token_type": "bearer", "role": db_user.role}
+    return {"access_token": token, "token_type": "bearer", "role": db_user.role,"username":db_user.name}
 
 
 @router.post("/logout", status_code=200)
@@ -109,7 +110,13 @@ def logout(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
 
 
 @router.put("/users/{user_id}", status_code=200)
-def edit_user(user_id: int, user: UserUpdate, db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)):
+def edit_user(user_id: int,
+              user: UserUpdate,
+              db: Session = Depends(get_db),
+              token: str = Depends(oauth2_scheme),
+              user_name:str=Header(None)
+              ):
+
     db_user = db.query(AuthUser).filter(AuthUser.token == token).first()
     if not db_user:
         raise HTTPException(status_code=401, detail=f"{token},-----------Invalid token,")
@@ -127,14 +134,16 @@ def edit_user(user_id: int, user: UserUpdate, db: Session = Depends(get_db), tok
     db_user_to_edit.role = user.role
     db_user_to_edit.is_delete = user.is_delete
 
+    setattr(db_user_to_edit, "current_user", user_name)
+
     db.commit()
     db.refresh(db_user_to_edit)
 
-    return {"msg": "User updated successfully"}
+    return {"msg": "User updated successfully","username":user_name}
 
 
 @router.delete("/users/{user_id}", status_code=200)
-def delete_user(user_id: int, db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)):
+def delete_user(user_id: int, db: Session = Depends(get_db), token: str = Depends(oauth2_scheme),user_name:str = Header(None)):
     db_user = db.query(AuthUser).filter(AuthUser.token == token).first()
     if not db_user:
         raise HTTPException(status_code=401, detail="Invalid token")
@@ -145,8 +154,8 @@ def delete_user(user_id: int, db: Session = Depends(get_db), token: str = Depend
     db_user_to_delete = db.query(User).filter(User.id == user_id).first()
     if not db_user_to_delete:
         raise HTTPException(status_code=404, detail="User not found")
-
     db_user_to_delete.is_delete = True
+    setattr(db_user_to_delete, "current_user", user_name)
     db.commit()
     db.refresh(db_user_to_delete)
 

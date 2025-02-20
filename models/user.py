@@ -1,5 +1,6 @@
-from sqlalchemy import Column, Integer, String, Boolean
+from sqlalchemy import Column, Integer, String, Boolean,event
 from database import Base
+from models.trigger_log import log_changes,log_deletes
 
 class User(Base):
     __tablename__ = "users"
@@ -10,3 +11,8 @@ class User(Base):
     phonenumber = Column(String)  # Changed to String for phone number
     role = Column(String, default="user")
     is_delete = Column(Boolean, default=False)  # Changed to Boolean for clarity
+
+
+event.listen(User, "after_insert", log_changes)
+event.listen(User, "after_update", log_changes)
+event.listen(User, "after_delete", log_deletes)
