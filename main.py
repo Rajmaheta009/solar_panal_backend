@@ -1,6 +1,4 @@
-import os
 from fastapi import FastAPI
-from starlette.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from database import Base, engine
 from router import auth, news,application_endpoint,contanct_us,menu,Pages,pages_content,dbsync,product

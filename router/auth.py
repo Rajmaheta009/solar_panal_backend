@@ -1,7 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException,Header
+from psycopg2 import IntegrityError
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 from fastapi.security import OAuth2PasswordBearer
+from uvicorn import logging
+
 from auth.hashing import hash_password, verify_password
 from auth.jwt import create_access_token
 from database import get_db
@@ -49,9 +52,14 @@ def get_user(user_id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/register", status_code=201)
-def register(user: UserCreate, db: Session = Depends(get_db),user_name:str=Header(None)):
+def register(user: UserCreate, db: Session = Depends(get_db), user_name: str = Header(None)):
     try:
+        if db is None:
+            raise HTTPException(status_code=500, detail="Database session not established")
+
+        # Check if user already exists
         db_user = db.query(User).filter(User.email == user.email).first()
+
         if db_user:
             if db_user.is_delete:
                 # Reactivate the user without modifying their password
@@ -65,8 +73,11 @@ def register(user: UserCreate, db: Session = Depends(get_db),user_name:str=Heade
 
             else:
                 raise HTTPException(status_code=400, detail="Email already registered")
+
+        # Hash the password
         hashed_password = hash_password(user.password)
 
+        # Create new user
         new_user = User(
             name=user.name,
             email=user.email,
@@ -75,18 +86,24 @@ def register(user: UserCreate, db: Session = Depends(get_db),user_name:str=Heade
             role=user.role,
             is_delete=user.is_delete
         )
-        setattr(new_user, "current_user", user_name)
 
+        # Set the current user with a default value if missing
+        setattr(new_user, "current_user", user_name if user_name else "system")
+
+        # Add and commit the new user
         db.add(new_user)
         db.commit()
         db.refresh(new_user)
 
         return {"msg": "User registered successfully"}
 
+    except IntegrityError:
+        db.rollback()
+        raise HTTPException(status_code=400, detail="Email already exists")
+
     except SQLAlchemyError as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail="An error occurred while registering the user")
-
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
 
 @router.post("/login", status_code=200)
 def login(user: UserLogin, db: Session = Depends(get_db)):
