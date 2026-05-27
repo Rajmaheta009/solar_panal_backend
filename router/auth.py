@@ -45,6 +45,7 @@ def register(user: UserCreate, db: Session = Depends(get_db)):
     except SQLAlchemyError as e:
         db.rollback()
         print(f"Error: {e}")
+        print(f"Error: {hashed_password}")
         raise HTTPException(status_code=500, detail="An error occurred while registering the user")
 
 
@@ -56,7 +57,7 @@ def login(user: UserLogin, db: Session = Depends(get_db)):
 
     # Create a token and save it in the auth_user table
     token = create_access_token({"id": db_user.id, "role": db_user.role}, db)
-    return {"access_token": token, "token_type": "bearer"}
+    return {"access_token": token, "token_type": "bearer" ,"role":db_user.role}
 
 @router.post("/logout", status_code=200)
 def logout(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
